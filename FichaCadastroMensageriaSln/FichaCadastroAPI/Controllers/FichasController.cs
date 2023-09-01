@@ -42,7 +42,7 @@ namespace FichaCadastroAPI.Controllers
                 int id = 1;
 
                 /*CUIDADO AO MEXER NESSA LINHA*/
-                while (true)
+                while (id <= 10000)
                 {
                     _messageRabbitMQ.ConfigureRabbitMQ.Message = Encoding.UTF8.GetBytes($"Id {id}  Data e Hora da aplicação {DateTime.Now}");
                     _messageRabbitMQ.BasicPublish();

@@ -18,7 +18,7 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        //_logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+        _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
         _messageRabbitMQ.ConfigureRabbitMQ = new ConfigureRabbitMQ(
             VirtualHost: "ficha",
@@ -32,31 +32,29 @@ public class Worker : BackgroundService
 
         var basicConsumer = _messageRabbitMQ.InstanciarEventingBasicConsumer();
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            basicConsumer.Received += (model, basicDeliverEventArgs) =>
             {
-                basicConsumer.Received += (model, basicDeliverEventArgs) =>
-                {
-                    basicDeliverEventArgs.RoutingKey = _messageRabbitMQ.ConfigureRabbitMQ.RouteKey;
-                    basicDeliverEventArgs.Exchange = _messageRabbitMQ.ConfigureRabbitMQ.Exchange;
-                    var body = basicDeliverEventArgs.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
+                basicDeliverEventArgs.RoutingKey = _messageRabbitMQ.ConfigureRabbitMQ.RouteKey;
+                basicDeliverEventArgs.Exchange = _messageRabbitMQ.ConfigureRabbitMQ.Exchange;
+                var body = basicDeliverEventArgs.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
 
-                    Console.WriteLine($"{message}");
-                };
+                Console.WriteLine($"{message}");
+            };
 
-                //await Task.Delay(1000, stoppingToken);
-            }
-            catch (Exception ex)
-            {
-
-                //throw;
-            }
-
-            _messageRabbitMQ.BasicConsume(basicConsumer);
-
+            _messageRabbitMQ.BasicConsume(basicConsumer);        
+        }
+        catch (Exception ex)
+        {
+            //throw;
         }
 
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(5000, stoppingToken);
+        }
     }
 }
