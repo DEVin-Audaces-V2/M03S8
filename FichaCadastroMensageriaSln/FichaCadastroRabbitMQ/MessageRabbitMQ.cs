@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace FichaCadastroRabbitMQ
 {
@@ -34,6 +35,24 @@ namespace FichaCadastroRabbitMQ
             _channel.QueueDeclare(ConfigureRabbitMQ.Queue, durable: ConfigureRabbitMQ.Durable, false,  ConfigureRabbitMQ.AutoDelete);
          }
 
+        public void QueueBind()
+        {
+            _channel.QueueBind(ConfigureRabbitMQ.Queue, ConfigureRabbitMQ.Exchange, ConfigureRabbitMQ.RouteKey);
+        }
 
+        public void BasicPublish()
+        {
+            _channel.BasicPublish(exchange: ConfigureRabbitMQ.Exchange, routingKey: ConfigureRabbitMQ.RouteKey, body: ConfigureRabbitMQ.Message);
+        }
+
+        public EventingBasicConsumer InstanciarEventingBasicConsumer()
+        {
+            return new EventingBasicConsumer(_channel);
+        }
+
+        public void BasicConsume(IBasicConsumer consumer)
+        {
+            _channel.BasicConsume(ConfigureRabbitMQ.Queue, autoAck: true, consumer);
+        }
     }
 }

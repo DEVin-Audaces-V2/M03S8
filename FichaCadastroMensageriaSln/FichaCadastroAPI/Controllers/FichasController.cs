@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Text;
 
 namespace FichaCadastroAPI.Controllers
 {
@@ -25,16 +26,28 @@ namespace FichaCadastroAPI.Controllers
         {
             try
             {
-                _messageRabbitMQ.ConfigureRabbitMQ = new ConfigureRabbitMQ("ficha", "ficha-exchange-topic", "topic", "ficha-cadastro-novo-queue-topic");
+                _messageRabbitMQ.ConfigureRabbitMQ = new ConfigureRabbitMQ(
+                    VirtualHost: "ficha",
+                    Exchange: "ficha-exchange-topic",
+                    Type: "topic",
+                    Queue: "ficha-cadastro-novo-queue-topic",
+                    RouteKey: "ficha-cadastro.novo-routeKey-topic"
+                );
 
                 _messageRabbitMQ.ConfigureVirtualHost();
                 _messageRabbitMQ.ExchangeDeclare();
                 _messageRabbitMQ.QueueDeclare();
+                _messageRabbitMQ.QueueBind();
 
-                //Bind da Queue
+                int id = 1;
 
-                ///Queue Declarar
-                ///Publicação da mensagem
+                /*CUIDADO AO MEXER NESSA LINHA*/
+                while (true)
+                {
+                    _messageRabbitMQ.ConfigureRabbitMQ.Message = Encoding.UTF8.GetBytes($"Id {id}  Data e Hora da aplicação {DateTime.Now}");
+                    _messageRabbitMQ.BasicPublish();
+                    id++;
+                }
 
                 return StatusCode(HttpStatusCode.Created.GetHashCode());
             }
